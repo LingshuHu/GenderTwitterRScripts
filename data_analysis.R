@@ -1,7 +1,8 @@
 ## R scripts for the article "Tweeting and Retweeting: Gender Discrepancies in Discursive Political Engagement and Influence on Twitter"
+library(dplyr)
 
 gender_diff_3var <- function(data) {
-  rtf <- dplyr::filter(data, verified == "FALSE", !is.na(gender), prob_bot <= .5)
+  rtf <- dplyr::filter(data, !verified, !is.na(gender), prob_bot <= .5)
   rtf$gender <- factor(rtf$gender)
   
   ## tweets sent by women and men
@@ -9,7 +10,7 @@ gender_diff_3var <- function(data) {
   t <- gmodels::CrossTable(rtf$gender)
   
   ## unique women and men users
-  rtfu <- rtf[!duplicated(rtf$user_id), ]
+  rtfu <- rtf[!duplicated(rtf$fake_id), ]
   message("unique women and men users")
   gmodels::CrossTable(rtfu$gender)
   
@@ -35,7 +36,7 @@ gender_diff_3var <- function(data) {
   
   ## gender and gender of retweet
   message("gender and gender of retweet")
-  rtfrv <- filter(rtf, retweet_verified == "FALSE", retweet_gender != "NA")
+  rtfrv <- dplyr::filter(rtf, !retweet_verified, !is.na(retweet_gender))
   gmodels::CrossTable(rtfrv$retweet_gender, rtfrv$gender)
   message("gender and gender of retweet: chi-square test")
   chi4 <- chisq.test(xtabs(~retweet_gender + gender, rtfrv))
@@ -46,7 +47,7 @@ gender_diff_3var <- function(data) {
   
   ## gender and gender of reply
   message("gender and gender of reply")
-  rtfrpv <- filter(rtf, reply_verified == "FALSE", reply_gender != "NA")
+  rtfrpv <- dplyr::filter(rtf, !reply_verified, !is.na(reply_gender))
   gmodels::CrossTable(rtfrpv$reply_gender, rtfrpv$gender)
   message("gender and gender of reply: chi-square test")
   chi5 <- chisq.test(xtabs(~reply_gender + gender, rtfrpv))
@@ -56,7 +57,7 @@ gender_diff_3var <- function(data) {
   print(es5)
   
   ## retweet counts of retweet between gender
-  rtfrt <- filter(rtf, is_retweet == "TRUE")
+  rtfrt <- dplyr::filter(rtf, is_retweet)
   message("retweet counts of retweet between gender: mean rank")
   rtfrt$retweet_retweet_rank <- rank(rtfrt$retweet_retweet_count)
   rk1 <- rtfrt %>% group_by(gender) %>% summarise(rank = mean(retweet_retweet_rank))
@@ -87,4 +88,5 @@ gender_diff_3var <- function(data) {
   print(eta2H2)
 }
 
-gender_diff_3var(data = rt_gender)
+gender_diff_3var(data = rt)
+
